@@ -1,4 +1,9 @@
 type availableColors = "red" | "blue" | "beige";
+const hexToTeamColor = {
+	"#ff881e": "red",
+	"#44c8ff": "blue",
+	"#dbd4af": "beige",
+} as const;
 
 const enum Assets {
 	Logo = "https://cdn.rcd.gg/PreMiD/websites/C/Codenames/assets/logo.png",
@@ -136,9 +141,25 @@ presence.on("UpdateData", async () => {
 				currentClueData = Array.from(document.querySelectorAll("div")).filter(
 					d => d.className?.includes("items-center text")
 				), //Empty array if no clue, else [0] then its split into 2 divs 1 with clue other with amount
-				color = Array.from(document.querySelectorAll("button"))
-					.find(b => b.className?.includes("text-base color-"))
-					.attributes.getNamedItem("color").textContent as availableColors;
+				hex = Array.from(document.querySelectorAll("button"))
+					.find(
+						b =>
+							b.className?.includes("text-base") &&
+							b.querySelector(".relative svg path")?.getAttribute("d") ===
+								// The SVG path of the smile face on the user button
+								"m432.71 528.79c-4.418 0-8 3.582-8 8 0 4.418 3.582 8 8 8 4.418 0 8-3.582 8-8 0-4.418-3.582-8-8-8m-2.667 4c.736 0 1.333.597 1.333 1.333 0 .736-.597 1.333-1.333 1.333-.736 0-1.333-.597-1.333-1.333 0-.736.597-1.333 1.333-1.333m5.333 0c.736 0 1.333.597 1.333 1.333 0 .736-.597 1.333-1.333 1.333-.736 0-1.333-.597-1.333-1.333 0-.736.597-1.333 1.333-1.333m-6.667 5.333h8c0 2.209-1.791 4-4 4-2.209 0-4-1.791-4-4"
+					)
+					.style.cssText.split(";")
+					.map(style => {
+						const [key, value] = style
+							.trim()
+							.split(":")
+							.map(x => x.trim());
+						return { key, value };
+					})
+					.find(css => css.key === "--ButtonBg")
+					.value as keyof typeof hexToTeamColor,
+				color = hexToTeamColor[hex] as availableColors;
 
 			if (color !== currentlySetColor) {
 				slideshow.deleteAllSlides();
